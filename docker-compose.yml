@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  gemweb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GEMINI_API_KEY: ${GEMINI_API_KEY}
+    image: heshan01/gemweb:latest
+    container_name: gemweb-app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - gemweb_logs:/var/log/nginx
+    networks:
+      - gemweb-net
+
+volumes:
+  gemweb_logs:
+    driver: local
+
+networks:
+  gemweb-net:
+    driver: bridge
