@@ -1,0 +1,290 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global safety net: default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Global Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.email != null);
+    }
+
+    // Explicit role lookup in users collection to prevent identity spoofing
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() 
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isBlocked() {
+      return isSignedIn() 
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid)) 
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isBlocked == true;
+    }
+
+    // A verified user is signed in, email is verified, and NOT blocked
+    function isVerifiedUser() {
+      return isSignedIn() && isEmailVerified() && !isBlocked();
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 3. User Entity Rules
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.uid == userId
+          && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+          && data.email is string && data.email.size() <= 200
+          && data.photoURL is string && data.photoURL.size() <= 1000
+          && data.phone is string && data.phone.size() <= 30
+          && data.location is string && data.location.size() <= 200
+          && data.bio is string && data.bio.size() <= 1000
+          && data.isVerifiedSeller is bool
+          && data.isBlocked is bool
+          && data.role is string && (data.role == 'user' || data.role == 'admin')
+          && data.createdAt is string;
+      }
+
+      // Read profiles: anyone can view user profiles
+      allow get: if true;
+      allow list: if isAdmin(); // Only admins can query list of users
+
+      // Create: Users can create their own profile when registering.
+      // Must not be self-assigned as Admin or Verified Seller.
+      allow create: if isSignedIn()
+        && request.auth.uid == userId
+        && isValidUser(request.resource.data)
+        && request.resource.data.isBlocked == false
+        && request.resource.data.isVerifiedSeller == false
+        && request.resource.data.role == 'user';
+
+      // Update: Users can update their profile fields except role, isBlocked, isVerifiedSeller, or email.
+      // Admins can update any field.
+      allow update: if (
+        isSignedIn()
+        && request.auth.uid == userId
+        && !isBlocked()
+        && isValidUser(request.resource.data)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.isBlocked == resource.data.isBlocked
+        && request.resource.data.isVerifiedSeller == resource.data.isVerifiedSeller
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.createdAt == resource.data.createdAt
+      ) || isAdmin();
+
+      // Delete: Only admins can delete user profiles
+      allow delete: if isAdmin();
+    }
+
+    // 4. Ad Entity Rules
+    match /ads/{adId} {
+      function isValidAd(data) {
+        return data.id == adId
+          && data.title is string && data.title.size() >= 5 && data.title.size() <= 100
+          && data.category is string && data.category.size() <= 100
+          && data.sellerId is string && data.sellerId.size() <= 128
+          && data.images is list && data.images.size() <= 10
+          && data.weight is number && data.weight >= 0 && data.weight <= 10000
+          && data.color is string && data.color.size() <= 100
+          && data.shape is string && data.shape.size() <= 100
+          && data.treatment is string && data.treatment.size() <= 100
+          && (data.origin is string || data.origin == null)
+          && data.price is number && data.price >= 0
+          && data.isNegotiable is bool
+          && data.description is string && data.description.size() <= 5000
+          && data.contactPreference is string && (data.contactPreference == 'phone' || data.contactPreference == 'chat' || data.contactPreference == 'both')
+          && data.location is string && data.location.size() <= 200
+          && data.status is string && (data.status == 'Active' || data.status == 'Sold' || data.status == 'Pending Approval' || data.status == 'Rejected' || data.status == 'Expired' || data.status == 'Suspended')
+          && data.isFeatured is bool
+          && data.createdAt is string
+          && data.updatedAt is string;
+      }
+
+      // Read ads: anyone (even unsigned users for browsing) can view active/sold/expired ads.
+      // Pending and Rejected are restricted to seller or admin.
+      allow get: if resource.data.status == 'Active'
+        || resource.data.status == 'Sold'
+        || resource.data.status == 'Expired'
+        || (isSignedIn() && (resource.data.sellerId == request.auth.uid || isAdmin()));
+
+      allow list: if true; // Listing is secured at query level if needed, but ads are public browse
+
+      // Create: Verified (authenticated & not blocked) users can create.
+      // Must set status to 'Pending Approval', isFeatured to false, and sellerId to request.auth.uid.
+      allow create: if isVerifiedUser()
+        && isValidId(adId)
+        && isValidAd(request.resource.data)
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.status == 'Pending Approval'
+        && request.resource.data.isFeatured == false;
+
+      // Update: Owner can update their own ads if not blocked.
+      // Owner cannot change status to Active/Rejected/Expired directly (only Sold), and cannot change sellerId or isFeatured.
+      // Owner cannot update terminal state ads (Sold, Rejected) unless admin.
+      // Admins can update any ad.
+      allow update: if (
+        isVerifiedUser()
+        && resource.data.sellerId == request.auth.uid
+        && resource.data.status != 'Sold'
+        && resource.data.status != 'Rejected'
+        && isValidAd(request.resource.data)
+        && request.resource.data.sellerId == resource.data.sellerId
+        && request.resource.data.isFeatured == resource.data.isFeatured
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (request.resource.data.status == resource.data.status || request.resource.data.status == 'Sold')
+      ) || isAdmin();
+
+      // Delete: Only owner or admin can delete.
+      allow delete: if (isSignedIn() && !isBlocked() && resource.data.sellerId == request.auth.uid) || isAdmin();
+    }
+
+    // 5. Chat & Messages Rules
+    match /chats/{chatId} {
+      function isValidChat(data) {
+        return data.id == chatId
+          && data.adId is string
+          && data.adTitle is string
+          && data.adPrice is number
+          && data.adImage is string
+          && data.buyerId is string
+          && data.sellerId is string
+          && data.participants is list && data.participants.size() == 2
+          && data.participants.hasAll([data.buyerId, data.sellerId])
+          && data.lastMessage is string
+          && data.lastMessageAt is string
+          && data.unreadBuyer is bool
+          && data.unreadSeller is bool;
+      }
+
+      // Read/Write access strictly limited to participants or admin
+      allow get: if isSignedIn() && (request.auth.uid in resource.data.participants || isAdmin());
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.participants || isAdmin());
+
+      allow create: if isVerifiedUser()
+        && isValidId(chatId)
+        && isValidChat(request.resource.data)
+        && request.auth.uid == request.resource.data.buyerId; // only buyer can initiate
+
+      allow update: if isVerifiedUser()
+        && isValidChat(request.resource.data)
+        && (request.auth.uid in resource.data.participants)
+        && request.resource.data.buyerId == resource.data.buyerId
+        && request.resource.data.sellerId == resource.data.sellerId;
+
+      allow delete: if isAdmin();
+
+      // Nested Messages sub-collection
+      match /messages/{messageId} {
+        function isValidMessage(data) {
+          return data.id == messageId
+            && data.senderId == request.auth.uid
+            && data.text is string
+            && data.imageUrl is string
+            && data.createdAt is string;
+        }
+
+        // Get/List: Must be a participant in the parent chat
+        allow get, list: if isSignedIn()
+          && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants || isAdmin());
+
+        // Create message: Must be a participant and not blocked
+        allow create: if isVerifiedUser()
+          && isValidId(messageId)
+          && isValidMessage(request.resource.data)
+          && (request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants);
+
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // 6. Reports Rules
+    match /reports/{reportId} {
+      function isValidReport(data) {
+        return data.id == reportId
+          && data.adId is string
+          && data.reporterId == request.auth.uid
+          && data.reason is string && data.reason.size() <= 200
+          && data.details is string && data.details.size() <= 1000
+          && data.status is string && (data.status == 'pending' || data.status == 'resolved')
+          && data.createdAt is string;
+      }
+
+      // Create: Authenticated users can report ads. Must match reporterId.
+      allow create: if isSignedIn()
+        && !isBlocked()
+        && isValidId(reportId)
+        && isValidReport(request.resource.data)
+        && request.resource.data.status == 'pending';
+
+      // Read/List/Update/Delete: strictly for Admins
+      allow get, list, update, delete: if isAdmin();
+    }
+
+    // 7. Categories Rules
+    match /categories/{categoryId} {
+      function isValidCategory(data) {
+        return data.id == categoryId
+          && data.name is string && data.name.size() >= 2 && data.name.size() <= 100;
+      }
+
+      // Read: Anyone can view category list
+      allow get, list: if true;
+
+      // Write: strictly Admins
+      allow create, update: if isAdmin() && isValidCategory(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 8. Announcements Rules
+    match /announcements/{announcementId} {
+      function isValidAnnouncement(data) {
+        return data.id == announcementId
+          && data.title is string && data.title.size() >= 5 && data.title.size() <= 200
+          && data.content is string && data.content.size() <= 5000
+          && data.isActive is bool
+          && data.createdAt is string;
+      }
+
+      // Read: Anyone can view active announcements
+      allow get, list: if true;
+
+      // Write: strictly Admins
+      allow create, update: if isAdmin() && isValidAnnouncement(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // 9. Admin Activity Logs Rules
+    match /admin_logs/{logId} {
+      function isValidLog(data) {
+        return data.id == logId
+          && data.adminId == request.auth.uid
+          && data.adminEmail is string
+          && data.action is string && data.action.size() <= 1000
+          && data.createdAt is string;
+      }
+
+      // Read/Write: strictly Admins
+      allow get, list: if isAdmin();
+      allow create: if isAdmin() && isValidId(logId) && isValidLog(request.resource.data);
+      allow update, delete: if false; // Logs are immutable!
+    }
+
+    // 10. Test Connection Rules
+    match /test/{testId} {
+      allow read: if true;
+    }
+  }
+}

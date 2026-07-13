@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Represents a registered buyer or seller on the platform.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique user ID matching Firebase Auth UID." },
+        "name": { "type": "string", "description": "The user's full name.", "minLength": 2, "maxLength": 100 },
+        "email": { "type": "string", "description": "The user's registered email address." },
+        "photoURL": { "type": "string", "description": "Profile picture URL." },
+        "phone": { "type": "string", "description": "Contact telephone number." },
+        "location": { "type": "string", "description": "The user's trading district or city." },
+        "bio": { "type": "string", "description": "Short bio about the trader/business." },
+        "isVerifiedSeller": { "type": "boolean", "description": "Whether the seller is verified by admin." },
+        "isBlocked": { "type": "boolean", "description": "Whether the user account has been banned/blocked." },
+        "role": { "type": "string", "description": "Role: user or admin.", "enum": ["user", "admin"] },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account registration timestamp." }
+      },
+      "required": ["uid", "name", "email", "isVerifiedSeller", "isBlocked", "role", "createdAt"]
+    },
+    "Ad": {
+      "title": "Gemstone Listing",
+      "description": "A gem ad posted for sale.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ad ID." },
+        "title": { "type": "string", "description": "Ad heading.", "minLength": 5, "maxLength": 100 },
+        "category": { "type": "string", "description": "Gem type/category." },
+        "sellerId": { "type": "string", "description": "The UID of the seller who posted the ad." },
+        "images": { "type": "array", "description": "List of photo URLs." },
+        "weight": { "type": "number", "description": "Weight of the stone in carats." },
+        "color": { "type": "string", "description": "Color of the gemstone." },
+        "shape": { "type": "string", "description": "Shape/cut of the stone." },
+        "treatment": { "type": "string", "description": "Treatment status (e.g. Heated, Unheated)." },
+        "origin": { "type": "string", "description": "Geographical origin of the gem." },
+        "price": { "type": "number", "description": "Gem price in LKR or USD." },
+        "isNegotiable": { "type": "boolean", "description": "Whether price is negotiable." },
+        "description": { "type": "string", "description": "Detailed gemstone explanation." },
+        "contactPreference": { "type": "string", "description": "How the seller prefers to be contacted.", "enum": ["phone", "chat", "both"] },
+        "location": { "type": "string", "description": "Trading location (district/city)." },
+        "status": { "type": "string", "description": "Listing validation and trade status.", "enum": ["Active", "Sold", "Pending Approval", "Rejected", "Expired"] },
+        "isFeatured": { "type": "boolean", "description": "Whether highlighted on the homepage." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the listing was posted." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "When the listing was last updated." }
+      },
+      "required": ["id", "title", "category", "sellerId", "images", "weight", "color", "shape", "treatment", "price", "isNegotiable", "contactPreference", "location", "status", "isFeatured", "createdAt", "updatedAt"]
+    },
+    "Chat": {
+      "title": "Chat Room",
+      "description": "A communication room between a buyer and a seller for a specific listing.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique chat room ID." },
+        "adId": { "type": "string", "description": "The gemstone listing this chat is about." },
+        "adTitle": { "type": "string", "description": "Title of the listing." },
+        "adPrice": { "type": "number", "description": "Listing price of the gem." },
+        "adImage": { "type": "string", "description": "Listing preview thumbnail image." },
+        "buyerId": { "type": "string", "description": "UID of the prospective buyer." },
+        "sellerId": { "type": "string", "description": "UID of the gemstone seller." },
+        "participants": { "type": "array", "description": "Array containing buyerId and sellerId." },
+        "lastMessage": { "type": "string", "description": "Preview of the last message sent." },
+        "lastMessageAt": { "type": "string", "format": "date-time", "description": "Timestamp of the last message." },
+        "unreadBuyer": { "type": "boolean", "description": "Whether buyer has unread messages." },
+        "unreadSeller": { "type": "boolean", "description": "Whether seller has unread messages." }
+      },
+      "required": ["id", "adId", "adTitle", "buyerId", "sellerId", "participants", "lastMessage", "lastMessageAt", "unreadBuyer", "unreadSeller"]
+    },
+    "Message": {
+      "title": "Chat Message",
+      "description": "An individual message within a Chat.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique message ID." },
+        "senderId": { "type": "string", "description": "UID of the user who sent the message." },
+        "text": { "type": "string", "description": "The message body text." },
+        "imageUrl": { "type": "string", "description": "Optional shared image URL." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Message delivery timestamp." }
+      },
+      "required": ["id", "senderId", "createdAt"]
+    },
+    "Report": {
+      "title": "Ad Report",
+      "description": "A notification flagged by a buyer about a suspicious, fraudulent, or inappropriate ad.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique report ID." },
+        "adId": { "type": "string", "description": "ID of the flagged ad." },
+        "reporterId": { "type": "string", "description": "UID of the user raising the flag." },
+        "reason": { "type": "string", "description": "Category of violation." },
+        "details": { "type": "string", "description": "Additional user explanation." },
+        "status": { "type": "string", "description": "Moderation status of report.", "enum": ["pending", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the report was filed." }
+      },
+      "required": ["id", "adId", "reporterId", "reason", "details", "status", "createdAt"]
+    },
+    "Category": {
+      "title": "Gemstone Category",
+      "description": "Available gemstone type category for filtering and posting.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID or slug of category." },
+        "name": { "type": "string", "description": "Display name of category." }
+      },
+      "required": ["id", "name"]
+    },
+    "Announcement": {
+      "title": "Site Announcement",
+      "description": "Admin published marquee notification banner for all visitors.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique announcement ID." },
+        "title": { "type": "string", "description": "Announcement main title." },
+        "content": { "type": "string", "description": "Detailed text content of announcement." },
+        "isActive": { "type": "boolean", "description": "Whether displayed." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When published." }
+      },
+      "required": ["id", "title", "content", "isActive", "createdAt"]
+    },
+    "AdminLog": {
+      "title": "Admin Activity Audit Log",
+      "description": "Internal tracking log of administrative actions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Log entry ID." },
+        "adminId": { "type": "string", "description": "UID of the administrator." },
+        "adminEmail": { "type": "string", "description": "Email of the admin." },
+        "action": { "type": "string", "description": "Action performed (e.g. Blocked user XYZ)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When performed." }
+      },
+      "required": ["id", "adminId", "adminEmail", "action", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": { "schema": "User", "description": "Individual trader accounts." },
+    "ads/{adId}": { "schema": "Ad", "description": "Marketplace gem listings." },
+    "chats/{chatId}": { "schema": "Chat", "description": "Messaging thread documents." },
+    "chats/{chatId}/messages/{messageId}": { "schema": "Message", "description": "Individual thread message records." },
+    "reports/{reportId}": { "schema": "Report", "description": "Listing report records." },
+    "categories/{categoryId}": { "schema": "Category", "description": "Gem type options list." },
+    "announcements/{announcementId}": { "schema": "Announcement", "description": "Sitewide banners list." },
+    "admin_logs/{logId}": { "schema": "AdminLog", "description": "Audit logs of administrative operations." }
+  }
+}
