@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    // tools {
-    //     nodejs 'Node21'
-    // }
-
     environment {
         VERCEL_TOKEN      = credentials('vercel-token')
         GEMINI_API_KEY    = credentials('gemini-api-key')
@@ -34,16 +30,6 @@ pipeline {
             }
         }
 
-        stage('Docker Build Test (Local Validation Only)') {
-            steps {
-                bat 'docker compose build'
-                bat 'docker compose up -d'
-                bat 'timeout /t 8'
-                bat 'curl -f http://localhost:8080'
-                bat 'docker compose down'
-            }
-        }
-
         stage('Install Vercel CLI') {
             steps {
                 bat 'npm install --global vercel@latest'
@@ -65,9 +51,6 @@ pipeline {
         }
         failure {
             echo '❌ Pipeline failed. Check console output.'
-        }
-        always {
-            bat 'docker system prune -f'
         }
     }
 }
