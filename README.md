@@ -2,163 +2,72 @@
 
 # 💎 GemStone — RatnaGem Marketplace
 
-**Sri Lanka's digital home for the Ratnapura gem trading community**
+**Sri Lanka's digital home for the Ratnapura gem trading community.**
+<br/>
+*A production-ready marketplace where verified buyers and sellers post gem listings, chat in real-time, and trade with confidence.*
 
-A modern web marketplace where verified buyers and sellers post gem listings, chat in real time, and trade with confidence.
-
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://gemstone-eight.vercel.app)
-[![Built with React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
-[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore%20%7C%20Storage-FFCA28?logo=firebase&logoColor=white)](https://firebase.google.com)
-[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](#license)
+[![Live Demo](https://img.shields.io/badge/Live_Portal-Operational-brightgreen?style=for-the-badge)](https://your-domain.com)
+[![Built with React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-Backend-FFCA28?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
 
 </div>
 
 ---
 
-## ✨ About
+## ✨ About The Project
 
-**GemStone (RatnaGem)** is a full-stack gem marketplace web app built for Sri Lanka's Ratnapura gem trading community. Sellers list gemstones with photos and details, buyers browse and message sellers directly through an in-app chat, and admins moderate listings from a dedicated dashboard — all backed by Firebase.
+**GemStone (RatnaGem)** is a full-stack, real-world e-commerce marketplace architected specifically for Sri Lanka's Gem City, Ratnapura. The platform bridges the gap between traditional gem trading and digital commerce. 
 
-## 🚀 Live Demo
+Backed by a robust CI/CD pipeline, Docker containerization, and a Serverless Firebase backend, GemStone is built for scalability, security, and high performance.
 
-👉 **[gemstone-eight.vercel.app](https://gemstone-eight.vercel.app)**
+## 🚀 Live Production Environment
 
-## 📸 Features
+👉 **[Access the GemStone Portal Here](https://your-domain.com)**
 
-- 🔐 **Buyer & Seller Accounts** — secure Firebase Authentication with role-based access
-- 💎 **Gem Ad Listings** — post, browse, and search gemstone listings with image galleries
-- 💬 **In-App Chat** — real-time buyer ↔ seller messaging with unread badges
-- 🛡️ **Admin Dashboard** — review, approve, and moderate listings and reports
-- 🌗 **Light / Dark Theme** — polished UI with smooth theme switching
-- 📱 **Fully Responsive** — optimized for mobile, tablet, and desktop
+*(Deployed globally via Vercel Edge Network)*
 
-## 🛠️ Tech Stack
+## 📸 Key Features
 
-| Layer | Technology |
+- 🔐 **Role-Based Authentication** — Secure Buyer, Seller, and Admin access levels via Firebase Auth.
+- 💎 **Dynamic Gem Listings** — Sellers can post, edit, and manage gemstone advertisements with high-resolution image galleries.
+- 💬 **Real-Time Messaging** — Integrated in-app chat bridging buyers and sellers instantly.
+- 🛡️ **Admin Governance Dashboard** — Centralized hub for moderating listings, managing users, and handling reports.
+- 🌗 **Adaptive UI** — Seamless Light/Dark theme switching with a fully responsive, mobile-first design.
+- 🤖 **AI Integration Ready** — Configured with Google GenAI SDK for future automated gem analysis and descriptions.
+
+## 🛠️ System Architecture & Tech Stack
+
+| Component | Technology Used |
 |---|---|
-| Frontend | React 19, TypeScript, Vite 6 |
-| Styling | Tailwind CSS v4 |
-| Backend Services | Firebase (Authentication, Firestore, Storage) |
-| AI | Google GenAI SDK |
-| Containerization | Docker + Nginx |
-| CI/CD | Jenkins → Vercel |
-| Hosting | Vercel |
+| **Frontend Framework** | React 19, TypeScript, Vite 6 |
+| **UI/UX Styling** | Tailwind CSS v4 |
+| **Backend & Database** | Firebase (Auth, Firestore NoSQL, Cloud Storage) |
+| **Containerization** | Docker, Nginx (Alpine) |
+| **CI/CD Automation** | Jenkins Pipeline (Native Windows execution) |
+| **Production Hosting** | Vercel (Custom Domain, Auto SSL) |
 
-## 📦 Run Locally with Docker (Recommended)
+## 🔄 CI/CD Pipeline Workflow
 
-The easiest way to run this project on **any machine** — no Node.js setup needed, just Docker.
+The project utilizes a continuous integration and deployment model. Every code push to the `main` branch triggers an automated Jenkins pipeline:
 
-### Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+1. **Source Checkout** from GitHub.
+2. **NPM Installation & Linting** to ensure code quality.
+3. **Vercel CLI Integration** via secure environment variables.
+4. **Production Deployment** directly to the Vercel edge network.
 
-### Steps
+## 📦 Local Development Setup
 
-1. **Download / clone this repository**
+### Method 1: Using Docker (Recommended for exact environment matching)
 
-   ```bash
-   git clone https://github.com/Heshan01/GemStone.git
-   cd GemStone
-   ```
-
-   > Or download the ZIP from GitHub (**Code → Download ZIP**) and extract it.
-
-2. **Build and start the container**
-
-   ```bash
-   docker compose build
-   docker compose up -d
-   ```
-
-3. **Open the app**
-
-   Visit **[http://localhost:8080](http://localhost:8080)** in your browser. 🎉
-
-4. **Stop the app**
-
-   ```bash
-   docker compose down
-   ```
-
-That's it — the app builds itself inside a container and serves via Nginx, with logs persisted in a Docker volume (`gemweb_logs`) so nothing is lost between restarts.
-
-## 💻 Run Locally without Docker (Development Mode)
-
-<details>
-<summary>Click to expand</summary>
-
-**Prerequisites:** Node.js 20+
+*Prerequisite: [Docker Desktop](https://www.docker.com/products/docker-desktop/) must be running.*
 
 ```bash
-git clone https://github.com/Heshan01/GemStone.git
+# 1. Clone the repository
+git clone [https://github.com/Heshan01/GemStone.git](https://github.com/Heshan01/GemStone.git)
 cd GemStone
-npm install
-npm run dev
-```
 
-Open **http://localhost:3000** in your browser.
-
-To create a production build:
-
-```bash
-npm run build
-npm run preview
-```
-
-</details>
-
-## 🔧 Environment Variables
-
-Copy `.env.example` to `.env.local` and fill in your Gemini API key if you plan to use AI features:
-
-```bash
-cp .env.example .env.local
-```
-
-```env
-GEMINI_API_KEY="your-gemini-api-key"
-```
-
-> Firebase configuration is already bundled in `firebase-applet-config.json` — no extra setup needed for Auth/Firestore/Storage.
-
-## 🔄 CI/CD Pipeline
-
-Every push to `main` runs an automated Jenkins pipeline:
-
-```
-git push → Jenkins → npm lint → Docker build validation → Deploy to Vercel (production)
-```
-
-See [`Jenkinsfile`](./Jenkinsfile) for the full pipeline definition.
-
-## 📁 Project Structure
-
-```
-GemStone/
-├── src/
-│   ├── components/     # Reusable UI components (Navbar, AdCard, Footer...)
-│   ├── contexts/        # Auth & Theme context providers
-│   ├── lib/              # Firebase config & DB initialization
-│   ├── pages/            # App pages (Home, Browse, Chat, Admin, etc.)
-│   └── App.tsx           # Root component & app router
-├── Dockerfile             # Multi-stage build → Nginx production image
-├── docker-compose.yml    # Local container orchestration + volume
-├── nginx.conf            # Nginx SPA routing config
-├── Jenkinsfile             # CI/CD pipeline definition
-└── firestore.rules       # Firestore security rules
-```
-
-## 🤝 Contributing
-
-Issues and pull requests are welcome! Feel free to fork the repo and submit improvements.
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
----
-
-<div align="center">
-Made with 💎 for Sri Lanka's gem trading community
-</div>
+# 2. Build and spin up the container
+docker compose build
+docker compose up -d
